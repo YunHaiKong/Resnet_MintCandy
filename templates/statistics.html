@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}数据统计 - ResNet包装分类系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center text-white mb-4">
+            <h1 class="display-5 fw-bold">
+                <i class="fas fa-chart-bar me-3"></i>
+                数据统计分析
+            </h1>
+            <p class="lead">数据集分布和质量分析报告</p>
+        </div>
+    </div>
+</div>
+
+{% if stats %}
+<!-- 统计概览卡片 -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-images fa-3x text-primary mb-3"></i>
+                <h3 class="text-primary fw-bold">{{ stats.total_samples }}</h3>
+                <p class="card-text">总样本数</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                <h3 class="text-success fw-bold">{{ stats.ok_count }}</h3>
+                <p class="card-text">合格样本</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-times-circle fa-3x text-danger mb-3"></i>
+                <h3 class="text-danger fw-bold">{{ stats.ng_count }}</h3>
+                <p class="card-text">不合格样本</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-percentage fa-3x text-info mb-3"></i>
+                <h3 class="text-info fw-bold">{{ "%.1f"|format(stats.ok_count / stats.total_samples * 100) }}%</h3>
+                <p class="card-text">合格率</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 详细统计信息 -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-image me-2"></i>
+                    图像格式分布
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for format, count in stats.image_formats.items() %}
+                {% if count > 0 %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold text-uppercase">{{ format }}</span>
+                        <span class="badge bg-secondary">{{ count }} 个</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-info" 
+                             style="width: {{ (count / stats.total_samples * 100)|round(1) }}%"
+                             title="{{ (count / stats.total_samples * 100)|round(1) }}%"></div>
+                    </div>
+                    <small class="text-muted">{{ (count / stats.total_samples * 100)|round(1) }}%</small>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-balance-scale me-2"></i>
+                    类别平衡性分析
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold text-success">OK (合格)</span>
+                        <span class="badge bg-success">{{ stats.ok_count }} 个</span>
+                    </div>
+                    <div class="progress" style="height: 12px;">
+                        <div class="progress-bar bg-success" 
+                             style="width: {{ (stats.ok_count / stats.total_samples * 100)|round(1) }}%"></div>
+                    </div>
+                    <small class="text-muted">{{ (stats.ok_count / stats.total_samples * 100)|round(1) }}%</small>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold text-danger">NG (不合格)</span>
+                        <span class="badge bg-danger">{{ stats.ng_count }} 个</span>
+                    </div>
+                    <div class="progress" style="height: 12px;">
+                        <div class="progress-bar bg-danger" 
+                             style="width: {{ (stats.ng_count / stats.total_samples * 100)|round(1) }}%"></div>
+                    </div>
+                    <small class="text-muted">{{ (stats.ng_count / stats.total_samples * 100)|round(1) }}%</small>
+                </div>
+                
+                {% set balance_ratio = (stats.ok_count / stats.ng_count) if stats.ng_count > 0 else 0 %}
+                <div class="alert alert-info mt-3">
+                    <strong>平衡比例:</strong> 
+                    {% if balance_ratio > 0 %}
+                        {{ "%.2f"|format(balance_ratio) }}:1 (OK:NG)
+                        {% if balance_ratio > 3 or balance_ratio < 0.33 %}
+                            <br><small class="text-warning">⚠️ 数据不平衡，建议进行数据增强</small>
+                        {% else %}
+                            <br><small class="text-success">✅ 数据分布相对平衡</small>
+                        {% endif %}
+                    {% else %}
+                        无NG样本
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 可视化图表 -->
+{% if chart %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    数据可视化分析
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="data:image/png;base64,{{ chart }}" class="img-fluid" alt="数据统计图表" style="max-width: 100%; height: auto;">
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- 数据质量评估 -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-clipboard-check me-2"></i>
+                    数据质量评估
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-thumbs-up text-success me-2"></i>优势</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>数据集规模: {{ stats.total_samples }} 个样本</li>
+                            {% if stats.total_samples >= 100 %}
+                            <li><i class="fas fa-check text-success me-2"></i>样本数量充足，适合训练</li>
+                            {% endif %}
+                            {% set balance_ratio = (stats.ok_count / stats.ng_count) if stats.ng_count > 0 else 0 %}
+                            {% if balance_ratio <= 3 and balance_ratio >= 0.33 %}
+                            <li><i class="fas fa-check text-success me-2"></i>类别分布相对平衡</li>
+                            {% endif %}
+                            <li><i class="fas fa-check text-success me-2"></i>支持多种图像格式</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-exclamation-triangle text-warning me-2"></i>建议改进</h6>
+                        <ul class="list-unstyled">
+                            {% if stats.total_samples < 100 %}
+                            <li><i class="fas fa-info text-info me-2"></i>建议增加更多训练样本</li>
+                            {% endif %}
+                            {% if balance_ratio > 3 or balance_ratio < 0.33 %}
+                            <li><i class="fas fa-info text-info me-2"></i>考虑数据增强平衡类别</li>
+                            {% endif %}
+                            {% if stats.image_formats.bmp > stats.image_formats.jpeg %}
+                            <li><i class="fas fa-info text-info me-2"></i>考虑统一图像格式以提高效率</li>
+                            {% endif %}
+                            <li><i class="fas fa-info text-info me-2"></i>定期验证数据质量和标注准确性</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 操作按钮 -->
+<div class="row">
+    <div class="col-12 text-center">
+        <button class="btn btn-primary me-2" onclick="location.reload()">
+            <i class="fas fa-sync-alt me-2"></i>刷新统计
+        </button>
+        <a href="{{ url_for('index') }}" class="btn btn-success me-2">
+            <i class="fas fa-upload me-2"></i>开始检测
+        </a>
+        <a href="{{ url_for('model_info') }}" class="btn btn-info">
+            <i class="fas fa-cog me-2"></i>模型信息
+        </a>
+    </div>
+</div>
+
+{% else %}
+<!-- 无数据状态 -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-database fa-4x text-muted mb-4"></i>
+                <h4 class="text-muted">暂无数据</h4>
+                <p class="text-muted mb-4">未找到数据集或数据加载失败</p>
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle me-2"></i>可能的原因：</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li>• data 文件夹不存在或为空</li>
+                        <li>• JSON 标注文件格式错误</li>
+                        <li>• 文件权限问题</li>
+                    </ul>
+                </div>
+                <button class="btn btn-primary" onclick="location.reload()">
+                    <i class="fas fa-sync-alt me-2"></i>重新加载
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // 添加工具提示
+    $('[data-bs-toggle="tooltip"]').tooltip();
+    
+    // 进度条动画
+    $('.progress-bar').each(function() {
+        const width = $(this).css('width');
+        $(this).css('width', '0%').animate({width: width}, 1000);
+    });
+});
+</script>
+{% endblock %}

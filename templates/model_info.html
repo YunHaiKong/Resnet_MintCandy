@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}模型信息 - ResNet包装分类系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center text-white mb-4">
+            <h1 class="display-5 fw-bold">
+                <i class="fas fa-cog me-3"></i>
+                模型信息管理
+            </h1>
+            <p class="lead">查看和管理ResNet分类模型</p>
+        </div>
+    </div>
+</div>
+
+<!-- 模型状态概览 -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                {% if info.model_loaded %}
+                    <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                    <h5 class="text-success">模型已加载</h5>
+                    <p class="text-muted">模型运行正常</p>
+                {% else %}
+                    <i class="fas fa-times-circle fa-4x text-danger mb-3"></i>
+                    <h5 class="text-danger">模型未加载</h5>
+                    <p class="text-muted">需要加载模型</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                {% if info.model_exists %}
+                    <i class="fas fa-file-alt fa-4x text-info mb-3"></i>
+                    <h5 class="text-info">模型文件存在</h5>
+                    <p class="text-muted">{{ info.model_path }}</p>
+                {% else %}
+                    <i class="fas fa-file-times fa-4x text-warning mb-3"></i>
+                    <h5 class="text-warning">模型文件缺失</h5>
+                    <p class="text-muted">请先训练模型</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-microchip fa-4x text-primary mb-3"></i>
+                <h5 class="text-primary">运行设备</h5>
+                <p class="text-muted">{{ info.device }}</p>
+                <small class="text-muted">当前使用CPU运行</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 模型详细信息 -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    模型详情
+                </h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>模型架构:</strong></td>
+                        <td>ResNet-18</td>
+                    </tr>
+                    <tr>
+                        <td><strong>分类数量:</strong></td>
+                        <td>2 类 (OK/NG)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>输入尺寸:</strong></td>
+                        <td>224 × 224 × 3</td>
+                    </tr>
+                    <tr>
+                        <td><strong>模型文件:</strong></td>
+                        <td>
+                            {% if info.model_exists %}
+                                <span class="text-success">{{ info.model_path }}</span>
+                            {% else %}
+                                <span class="text-danger">文件不存在</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if info.model_size %}
+                    <tr>
+                        <td><strong>文件大小:</strong></td>
+                        <td>{{ info.model_size }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if info.last_modified %}
+                    <tr>
+                        <td><strong>最后修改:</strong></td>
+                        <td>{{ info.last_modified }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-cogs me-2"></i>
+                    模型操作
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if info.model_exists %}
+                    {% if not info.model_loaded %}
+                        <button class="btn btn-success btn-lg w-100 mb-3" id="loadModelBtn">
+                            <i class="fas fa-play me-2"></i>
+                            加载模型
+                        </button>
+                    {% else %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            模型已成功加载并可用于预测
+                        </div>
+                        <button class="btn btn-warning w-100 mb-3" id="reloadModelBtn">
+                            <i class="fas fa-sync-alt me-2"></i>
+                            重新加载模型
+                        </button>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        模型文件不存在，请先训练模型
+                    </div>
+                    <a href="#" class="btn btn-primary w-100 mb-3" onclick="showTrainingInstructions()">
+                        <i class="fas fa-graduation-cap me-2"></i>
+                        查看训练说明
+                    </a>
+                {% endif %}
+                
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary w-100">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    返回主页
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 模型性能信息 -->
+{% if info.model_exists %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    模型性能
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>训练信息</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-layer-group text-primary me-2"></i>基于预训练ResNet-18</li>
+                            <li><i class="fas fa-database text-info me-2"></i>使用迁移学习</li>
+                            <li><i class="fas fa-cog text-success me-2"></i>针对包装分类优化</li>
+                            <li><i class="fas fa-shield-alt text-warning me-2"></i>包含Dropout防止过拟合</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>预处理流程</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-expand-arrows-alt text-primary me-2"></i>图像缩放至 224×224</li>
+                            <li><i class="fas fa-palette text-info me-2"></i>RGB 颜色空间</li>
+                            <li><i class="fas fa-balance-scale text-success me-2"></i>ImageNet 标准化</li>
+                            <li><i class="fas fa-magic text-warning me-2"></i>数据增强处理</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- 检查是否存在训练历史图片 -->
+                <div class="mt-4">
+                    <h6>训练历史</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <img src="/static/training_history.png" class="img-fluid" alt="训练历史" 
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                    <div style="display: none;">
+                                        <i class="fas fa-image fa-3x text-muted mb-2"></i>
+                                        <p class="text-muted">训练历史图表不可用</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <img src="/static/confusion_matrix.png" class="img-fluid" alt="混淆矩阵" 
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                    <div style="display: none;">
+                                        <i class="fas fa-table fa-3x text-muted mb-2"></i>
+                                        <p class="text-muted">混淆矩阵不可用</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- 训练说明模态框 -->
+<div class="modal fade" id="trainingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-graduation-cap me-2"></i>
+                    模型训练说明
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6><i class="fas fa-list-ol text-primary me-2"></i>训练步骤</h6>
+                <ol>
+                    <li><strong>准备数据:</strong> 确保 data 文件夹包含图片和对应的 JSON 标注文件</li>
+                    <li><strong>安装依赖:</strong> 运行 <code>pip install -r requirements.txt</code></li>
+                    <li><strong>开始训练:</strong> 运行 <code>python train_resnet.py</code> 或 <code>python train_resnet_safe.py</code></li>
+                    <li><strong>等待完成:</strong> 训练完成后会生成 <code>best_resnet_model.pth</code> 文件</li>
+                </ol>
+                
+                <h6 class="mt-4"><i class="fas fa-terminal text-success me-2"></i>命令示例</h6>
+                <div class="bg-dark text-light p-3 rounded">
+                    <code>
+                        # 标准训练（推荐GPU环境）<br>
+                        python train_resnet.py<br><br>
+                        # 安全训练（CPU环境或内存受限）<br>
+                        python train_resnet_safe.py<br><br>
+                        # 使用批处理文件<br>
+                        run_safe_training.bat
+                    </code>
+                </div>
+                
+                <h6 class="mt-4"><i class="fas fa-exclamation-triangle text-warning me-2"></i>注意事项</h6>
+                <ul>
+                    <li>训练时间取决于数据量和硬件配置</li>
+                    <li>建议至少准备100个样本进行训练</li>
+                    <li>确保OK和NG样本数量相对平衡</li>
+                    <li>训练过程中会自动保存最佳模型</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <a href="{{ url_for('statistics') }}" class="btn btn-primary">查看数据统计</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 状态提示区域 -->
+<div id="statusArea"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // 加载模型按钮事件
+    $('#loadModelBtn, #reloadModelBtn').click(function() {
+        const btn = $(this);
+        const originalText = btn.html();
+        
+        // 显示加载状态
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>加载中...');
+        
+        $.ajax({
+            url: '/load_model',
+            type: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    showAlert('模型加载成功！', 'success');
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert(response.message || '模型加载失败', 'danger');
+                    btn.prop('disabled', false).html(originalText);
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                showAlert(response?.message || '模型加载失败，请检查模型文件', 'danger');
+                btn.prop('disabled', false).html(originalText);
+            }
+        });
+    });
+});
+
+function showTrainingInstructions() {
+    $('#trainingModal').modal('show');
+}
+
+function showAlert(message, type) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    $('#statusArea').html(alertHtml);
+    
+    // 3秒后自动隐藏成功消息
+    if (type === 'success') {
+        setTimeout(function() {
+            $('.alert').alert('close');
+        }, 3000);
+    }
+}
+</script>
+{% endblock %}
