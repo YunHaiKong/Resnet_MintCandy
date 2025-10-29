@@ -39,17 +39,12 @@
 
 ## 🚀 快速开始
 
-### 方法一：使用批处理文件（Windows）
-```bash
-start_app.bat
-```
-
-### 方法二：直接运行Python
+### 方法一：直接运行Python
 ```bash
 python app.py
 ```
 
-### 方法三：使用Flask开发服务器
+### 方法二：使用Flask开发服务器
 ```bash
 flask run
 ```
@@ -60,9 +55,16 @@ flask run
 
 ### 图像上传检测
 1. 打开Web界面
+<img width="969" height="860" alt="image" src="https://github.com/user-attachments/assets/ea80b49d-34e3-4edc-abfb-86c3ea91aeab" />
+
 2. 拖拽图片到上传区域或点击"选择文件"按钮
+<img width="969" height="543" alt="image" src="https://github.com/user-attachments/assets/a1af3e6b-ccf1-4102-9514-118cea64709c" />
+
 3. 系统自动处理并显示预测结果
+<img width="764" height="917" alt="image" src="https://github.com/user-attachments/assets/c68922d1-c2e8-4b36-ab31-ebf08e82aa61" />
+
 4. 查看预测类别、置信度和详细概率分布
+<img width="765" height="665" alt="image" src="https://github.com/user-attachments/assets/2661fe2e-ead1-48b1-b260-51149afee1b3" />
 
 ### 模型管理
 - 访问 `/model_info` 查看模型状态
