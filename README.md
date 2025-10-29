@@ -25,8 +25,8 @@
 
 1. **克隆项目**
    ```bash
-   git clone <repository-url>
-   cd resnet
+   git clone https://github.com/YunHaiKong/Resnet_MintCandy.git
+   cd Resnet_MintCandy
    ```
 
 2. **安装依赖**
@@ -61,10 +61,10 @@ flask run
 <img width="969" height="543" alt="image" src="https://github.com/user-attachments/assets/a1af3e6b-ccf1-4102-9514-118cea64709c" />
 
 3. 系统自动处理并显示预测结果
-<img width="764" height="917" alt="image" src="https://github.com/user-attachments/assets/c68922d1-c2e8-4b36-ab31-ebf08e82aa61" />
+<img width="765" height="665" alt="image" src="https://github.com/user-attachments/assets/2661fe2e-ead1-48b1-b260-51149afee1b3" />
 
 4. 查看预测类别、置信度和详细概率分布
-<img width="765" height="665" alt="image" src="https://github.com/user-attachments/assets/2661fe2e-ead1-48b1-b260-51149afee1b3" />
+<img width="764" height="917" alt="image" src="https://github.com/user-attachments/assets/c68922d1-c2e8-4b36-ab31-ebf08e82aa61" />
 
 ### 模型管理
 - 访问 `/model_info` 查看模型状态
